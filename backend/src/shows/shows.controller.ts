@@ -18,8 +18,16 @@ export class ShowsController {
     }
 
     @Get()
-    findAll(@Query('movieId') movieId?: string, @Query('date') date?: string) {
-        return this.showsService.findAll(movieId ? +movieId : undefined, date);
+    findAll(
+        @Query('movieId') movieId?: string, 
+        @Query('date') date?: string,
+        @Query('theaterId') theaterId?: string
+    ) {
+        return this.showsService.findAll(
+            movieId ? +movieId : undefined, 
+            date,
+            theaterId ? +theaterId : undefined
+        );
     }
 
     @Get(':id')

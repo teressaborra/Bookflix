@@ -38,7 +38,7 @@ export class ShowsService {
         return this.showsRepository.save(show);
     }
 
-    findAll(movieId?: number, date?: string) {
+    findAll(movieId?: number, date?: string, theaterId?: number) {
         const query = this.showsRepository.createQueryBuilder('show')
             .leftJoinAndSelect('show.movie', 'movie')
             .leftJoinAndSelect('show.theater', 'theater')
@@ -46,6 +46,10 @@ export class ShowsService {
 
         if (movieId) {
             query.andWhere('show.movie.id = :movieId', { movieId });
+        }
+
+        if (theaterId) {
+            query.andWhere('show.theater.id = :theaterId', { theaterId });
         }
 
         if (date) {

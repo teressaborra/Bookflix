@@ -66,7 +66,7 @@ const MovieCardProfessional = ({ movie }) => {
                         </div>
                         
                         <Link
-                            to={`/movies/${movie.id}`}
+                            to={`/movies/${movie.id}/book`}
                             className="block w-full bg-primary hover:bg-red-700 text-white text-center py-2 rounded-lg font-medium transition-colors"
                         >
                             Book Now

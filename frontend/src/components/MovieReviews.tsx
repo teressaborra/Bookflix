@@ -109,7 +109,7 @@ const MovieReviews: React.FC<MovieReviewsProps> = ({
                 {/* Overall Rating */}
                 <div className="flex items-center gap-4 p-4 bg-dark/50 rounded-lg mb-6">
                     <div className="text-center">
-                        <div className="text-3xl font-bold text-primary">{averageRating.toFixed(1)}</div>
+                        <div className="text-3xl font-bold text-primary">{averageRating ? averageRating.toFixed(1) : '0.0'}</div>
                         <div className="flex justify-center mb-1">
                             {renderStars(Math.round(averageRating))}
                         </div>

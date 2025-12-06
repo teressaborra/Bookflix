@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { theatersApi } from '../api/services-simple';
+import { Link } from 'react-router-dom';
+import { theatersApi, showsApi } from '../api/services-simple';
 
 interface Theater {
     id: number;
@@ -14,8 +15,25 @@ interface Theater {
     contactNumber: string;
 }
 
+interface Movie {
+    id: number;
+    title: string;
+    posterUrl: string;
+    genre: string;
+    language: string;
+    rating: string;
+}
+
+interface Show {
+    id: number;
+    startTime: string;
+    movie: Movie;
+    theater: Theater;
+}
+
 const Theaters: React.FC = () => {
     const [theaters, setTheaters] = useState<Theater[]>([]);
+    const [theaterMovies, setTheaterMovies] = useState<{ [key: number]: Movie[] }>({});
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [locationFilter, setLocationFilter] = useState('');
@@ -27,7 +45,36 @@ const Theaters: React.FC = () => {
     const fetchTheaters = async () => {
         try {
             const response = await theatersApi.getAll();
-            setTheaters(response.data || []);
+            const theatersData = response.data || [];
+            setTheaters(theatersData);
+            
+            // Fetch current movies for each theater
+            const moviePromises = theatersData.map(async (theater: Theater) => {
+                try {
+                    const showsResponse = await showsApi.getByTheater(theater.id);
+                    const shows = showsResponse.data || [];
+                    
+                    // Get unique movies for this theater
+                    const uniqueMovies = shows.reduce((acc: Movie[], show: Show) => {
+                        if (!acc.find(movie => movie.id === show.movie.id)) {
+                            acc.push(show.movie);
+                        }
+                        return acc;
+                    }, []);
+                    
+                    return { theaterId: theater.id, movies: uniqueMovies.slice(0, 3) }; // Show max 3 movies
+                } catch (error) {
+                    return { theaterId: theater.id, movies: [] };
+                }
+            });
+            
+            const movieResults = await Promise.all(moviePromises);
+            const movieMap = movieResults.reduce((acc, result) => {
+                acc[result.theaterId] = result.movies;
+                return acc;
+            }, {} as { [key: number]: Movie[] });
+            
+            setTheaterMovies(movieMap);
         } catch (error) {
             console.error('Error fetching theaters:', error);
             setTheaters([]);
@@ -127,7 +174,11 @@ const Theaters: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTheaters.map(theater => (
-                            <TheaterCard key={theater.id} theater={theater} />
+                            <TheaterCard 
+                                key={theater.id} 
+                                theater={theater} 
+                                movies={theaterMovies[theater.id] || []} 
+                            />
                         ))}
                     </div>
                 )}
@@ -136,7 +187,7 @@ const Theaters: React.FC = () => {
     );
 };
 
-const TheaterCard: React.FC<{ theater: Theater }> = ({ theater }) => {
+const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater, movies }) => {
     return (
         <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
             {/* Theater Header */}
@@ -223,11 +274,38 @@ const TheaterCard: React.FC<{ theater: Theater }> = ({ theater }) => {
                 </div>
             </div>
 
+            {/* Currently Playing Movies */}
+            {movies.length > 0 && (
+                <div className="px-4 pb-4">
+                    <h4 className="font-semibold text-gray-800 mb-3">Now Playing</h4>
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                        {movies.map((movie) => (
+                            <div key={movie.id} className="text-center">
+                                <img
+                                    src={movie.posterUrl || '/api/placeholder/60/90'}
+                                    alt={movie.title}
+                                    className="w-full h-16 object-cover rounded mb-1"
+                                />
+                                <p className="text-xs text-gray-600 line-clamp-2 font-medium">
+                                    {movie.title}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {movie.language}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Action Button */}
             <div className="px-4 pb-4">
-                <button className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                    View Showtimes
-                </button>
+                <Link 
+                    to={`/theaters/${theater.id}/movies`}
+                    className="block w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-center"
+                >
+                    View All Movies & Showtimes
+                </Link>
             </div>
         </div>
     );

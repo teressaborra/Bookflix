@@ -170,7 +170,7 @@ const MovieDetails = () => {
                                             <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                                                 <div className="text-right">
                                                     <div className="text-xl font-bold text-white">
-                                                        ${show.currentPrice?.toFixed(2) || show.basePrice.toFixed(2)}
+                                                        ${show.currentPrice ? show.currentPrice.toFixed(2) : show.basePrice?.toFixed(2) || '0.00'}
                                                     </div>
                                                     {show.currentPrice !== show.basePrice && (
                                                         <div className="text-xs text-orange-400 flex items-center justify-end gap-1">

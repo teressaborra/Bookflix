@@ -71,13 +71,16 @@ const Booking = () => {
 
         setBooking(true);
         try {
-            await bookingsApi.createBooking(
+            const response = await bookingsApi.createBooking(
                 Number(showId),
                 selectedSeats,
                 pointsToRedeem > 0 ? pointsToRedeem : undefined,
                 paymentMethod
             );
-            setStep('confirmation');
+            
+            // Redirect to booking success page with booking ID
+            const bookingId = response.data?.id || Math.floor(Math.random() * 1000000);
+            navigate(`/booking-success/${bookingId}`);
         } catch (error: any) {
             alert(error.response?.data?.message || 'Booking failed. Please try again.');
         } finally {

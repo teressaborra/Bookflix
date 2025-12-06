@@ -78,16 +78,44 @@ const Admin = () => {
 
     // Show Form State
     const [showForm, setShowForm] = useState({
-        movieId: 0, theaterId: 0, startTime: '', totalSeats: 0, basePrice: 0
+        movieId: 0, 
+        selectedTheaters: [] as number[],
+        showtimes: [] as { theaterId: number; startTime: string; totalSeats: number; basePrice: number; isPremium: boolean }[],
+        basePrice: 0,
+        totalSeats: 100
     });
+
+    // Data for dropdowns
+    const [movies, setMovies] = useState<any[]>([]);
+    const [theaters, setTheaters] = useState<any[]>([]);
+    const [loadingData, setLoadingData] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'analytics') {
             loadAnalyticsData();
         } else if (activeTab === 'pricing') {
             loadPricingData();
+        } else if (activeTab === 'shows') {
+            loadMoviesAndTheaters();
         }
     }, [activeTab, dateRange]);
+
+    const loadMoviesAndTheaters = async () => {
+        setLoadingData(true);
+        try {
+            const [moviesResponse, theatersResponse] = await Promise.all([
+                api.get('/movies'),
+                api.get('/theaters')
+            ]);
+            setMovies(moviesResponse.data || []);
+            setTheaters(theatersResponse.data || []);
+        } catch (error) {
+            console.error('Error loading movies and theaters:', error);
+            setMessage('Failed to load movies and theaters data');
+        } finally {
+            setLoadingData(false);
+        }
+    };
 
     const loadAnalyticsData = async () => {
         setLoading(true);
@@ -177,20 +205,72 @@ const Admin = () => {
 
     const handleShowSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        try {
-            await api.post('/shows', {
-                ...showForm,
-                movieId: Number(showForm.movieId),
-                theaterId: Number(showForm.theaterId),
-                totalSeats: Number(showForm.totalSeats),
-                basePrice: Number(showForm.basePrice),
-                currentPrice: Number(showForm.basePrice)
-            });
-            setMessage('Show added successfully!');
-            setShowForm({ movieId: 0, theaterId: 0, startTime: '', totalSeats: 0, basePrice: 0 });
-        } catch (error) {
-            setMessage('Failed to add show');
+        
+        if (showForm.showtimes.length === 0) {
+            setMessage('Please add at least one showtime');
+            return;
         }
+
+        try {
+            // Create multiple shows - one for each theater-time combination
+            const showPromises = showForm.showtimes.map(showtime => 
+                api.post('/shows', {
+                    movieId: showForm.movieId,
+                    theaterId: showtime.theaterId,
+                    startTime: showtime.startTime,
+                    totalSeats: showtime.totalSeats,
+                    basePrice: showtime.basePrice,
+                    currentPrice: showtime.basePrice,
+                    isPremium: showtime.isPremium,
+                    isSpecialScreening: false
+                })
+            );
+
+            await Promise.all(showPromises);
+            setMessage(`Successfully created ${showForm.showtimes.length} shows! 🎬`);
+            
+            // Reset form
+            setShowForm({
+                movieId: 0,
+                selectedTheaters: [],
+                showtimes: [],
+                basePrice: 0,
+                totalSeats: 100
+            });
+        } catch (error) {
+            setMessage('Failed to create shows. Please check all fields.');
+        }
+    };
+
+    const addShowtime = () => {
+        if (showForm.selectedTheaters.length === 0) {
+            setMessage('Please select at least one theater first');
+            return;
+        }
+
+        const newShowtimes = showForm.selectedTheaters.map(theaterId => ({
+            theaterId,
+            startTime: '',
+            totalSeats: showForm.totalSeats,
+            basePrice: showForm.basePrice,
+            isPremium: false
+        }));
+
+        setShowForm({
+            ...showForm,
+            showtimes: [...showForm.showtimes, ...newShowtimes]
+        });
+    };
+
+    const removeShowtime = (index: number) => {
+        const newShowtimes = showForm.showtimes.filter((_, i) => i !== index);
+        setShowForm({ ...showForm, showtimes: newShowtimes });
+    };
+
+    const updateShowtime = (index: number, field: string, value: any) => {
+        const newShowtimes = [...showForm.showtimes];
+        newShowtimes[index] = { ...newShowtimes[index], [field]: value };
+        setShowForm({ ...showForm, showtimes: newShowtimes });
     };
 
     return (
@@ -829,51 +909,237 @@ const Admin = () => {
                 )}
 
                 {activeTab === 'shows' && (
-                    <form onSubmit={handleShowSubmit} className="space-y-6">
-                        <h2 className="text-2xl font-bold text-white mb-6">Add New Show</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <input
-                                placeholder="Movie ID"
-                                type="number"
-                                className="input-field"
-                                value={showForm.movieId}
-                                onChange={e => setShowForm({ ...showForm, movieId: Number(e.target.value) })}
-                                required
-                            />
-                            <input
-                                placeholder="Theater ID"
-                                type="number"
-                                className="input-field"
-                                value={showForm.theaterId}
-                                onChange={e => setShowForm({ ...showForm, theaterId: Number(e.target.value) })}
-                                required
-                            />
-                            <input
-                                type="datetime-local"
-                                className="input-field"
-                                value={showForm.startTime}
-                                onChange={e => setShowForm({ ...showForm, startTime: e.target.value })}
-                                required
-                            />
-                            <input
-                                placeholder="Total Seats"
-                                type="number"
-                                className="input-field"
-                                value={showForm.totalSeats}
-                                onChange={e => setShowForm({ ...showForm, totalSeats: Number(e.target.value) })}
-                                required
-                            />
-                            <input
-                                placeholder="Base Price"
-                                type="number"
-                                step="0.01"
-                                className="input-field"
-                                value={showForm.basePrice}
-                                onChange={e => setShowForm({ ...showForm, basePrice: Number(e.target.value) })}
-                                required
-                            />
+                    <form onSubmit={handleShowSubmit} className="space-y-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+                                <Plus className="w-6 h-6 text-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">Create Movie Shows</h2>
+                                <p className="text-gray-400">Schedule a movie across multiple theaters with different timings</p>
+                            </div>
                         </div>
-                        <button type="submit" className="btn-primary w-full">Add Show</button>
+
+                        {loadingData ? (
+                            <div className="flex justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Movie Selection */}
+                                <div className="bg-dark/50 rounded-lg p-6">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Select Movie</h3>
+                                    <select
+                                        className="input-field w-full"
+                                        value={showForm.movieId}
+                                        onChange={e => setShowForm({ ...showForm, movieId: Number(e.target.value) })}
+                                        required
+                                    >
+                                        <option value={0}>Choose a movie...</option>
+                                        {movies.map(movie => (
+                                            <option key={movie.id} value={movie.id}>
+                                                {movie.title} ({movie.language}) - {movie.genre}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    
+                                    {showForm.movieId > 0 && (
+                                        <div className="mt-4 p-4 bg-black/30 rounded-lg">
+                                            {(() => {
+                                                const selectedMovie = movies.find(m => m.id === showForm.movieId);
+                                                return selectedMovie ? (
+                                                    <div className="flex items-center gap-4">
+                                                        <img 
+                                                            src={selectedMovie.posterUrl || '/api/placeholder/80/120'} 
+                                                            alt={selectedMovie.title}
+                                                            className="w-16 h-24 object-cover rounded"
+                                                        />
+                                                        <div>
+                                                            <h4 className="font-bold text-white">{selectedMovie.title}</h4>
+                                                            <p className="text-sm text-gray-400">{selectedMovie.durationMin} min • {selectedMovie.language} • {selectedMovie.rating}</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{selectedMovie.genre}</p>
+                                                        </div>
+                                                    </div>
+                                                ) : null;
+                                            })()}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Theater Selection */}
+                                <div className="bg-dark/50 rounded-lg p-6">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Select Theaters</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                                        {theaters.map(theater => (
+                                            <label key={theater.id} className="flex items-center space-x-3 cursor-pointer p-3 bg-black/20 rounded-lg hover:bg-black/30 transition-colors">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={showForm.selectedTheaters.includes(theater.id)}
+                                                    onChange={e => {
+                                                        if (e.target.checked) {
+                                                            setShowForm({
+                                                                ...showForm,
+                                                                selectedTheaters: [...showForm.selectedTheaters, theater.id]
+                                                            });
+                                                        } else {
+                                                            setShowForm({
+                                                                ...showForm,
+                                                                selectedTheaters: showForm.selectedTheaters.filter(id => id !== theater.id)
+                                                            });
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 text-primary bg-gray-700 border-gray-600 rounded focus:ring-primary focus:ring-2"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-white">{theater.name}</div>
+                                                    <div className="text-sm text-gray-400">{theater.location}</div>
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    
+                                    {showForm.selectedTheaters.length > 0 && (
+                                        <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                            <p className="text-green-400 text-sm">
+                                                ✓ {showForm.selectedTheaters.length} theater(s) selected
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Default Settings */}
+                                <div className="bg-dark/50 rounded-lg p-6">
+                                    <h3 className="text-lg font-semibold text-white mb-4">Default Settings</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-2">Default Seats per Theater</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                max="500"
+                                                className="input-field"
+                                                value={showForm.totalSeats}
+                                                onChange={e => setShowForm({ ...showForm, totalSeats: Number(e.target.value) })}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-2">Default Base Price (₹)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                className="input-field"
+                                                value={showForm.basePrice}
+                                                onChange={e => setShowForm({ ...showForm, basePrice: Number(e.target.value) })}
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <button
+                                        type="button"
+                                        onClick={addShowtime}
+                                        disabled={showForm.selectedTheaters.length === 0}
+                                        className="mt-4 w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        Add Showtimes for Selected Theaters
+                                        {showForm.selectedTheaters.length > 0 && (
+                                            <span className="bg-green-800 px-2 py-1 rounded-full text-xs">
+                                                {showForm.selectedTheaters.length}
+                                            </span>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* Showtimes Configuration */}
+                                {showForm.showtimes.length > 0 && (
+                                    <div className="bg-dark/50 rounded-lg p-6">
+                                        <h3 className="text-lg font-semibold text-white mb-4">Configure Showtimes</h3>
+                                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                                            {showForm.showtimes.map((showtime, index) => {
+                                                const theater = theaters.find(t => t.id === showtime.theaterId);
+                                                return (
+                                                    <div key={index} className="p-4 bg-black/30 rounded-lg border border-white/10">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <div>
+                                                                <h4 className="font-medium text-white">{theater?.name}</h4>
+                                                                <p className="text-sm text-gray-400">{theater?.location}</p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeShowtime(index)}
+                                                                className="text-red-400 hover:text-red-300 text-sm"
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs text-gray-400 mb-1">Show Time</label>
+                                                                <input
+                                                                    type="datetime-local"
+                                                                    className="input-field text-sm"
+                                                                    value={showtime.startTime}
+                                                                    onChange={e => updateShowtime(index, 'startTime', e.target.value)}
+                                                                    required
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs text-gray-400 mb-1">Seats</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    className="input-field text-sm"
+                                                                    value={showtime.totalSeats}
+                                                                    onChange={e => updateShowtime(index, 'totalSeats', Number(e.target.value))}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs text-gray-400 mb-1">Price (₹)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.01"
+                                                                    className="input-field text-sm"
+                                                                    value={showtime.basePrice}
+                                                                    onChange={e => updateShowtime(index, 'basePrice', Number(e.target.value))}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-end">
+                                                                <label className="flex items-center space-x-2 cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={showtime.isPremium}
+                                                                        onChange={e => updateShowtime(index, 'isPremium', e.target.checked)}
+                                                                        className="w-4 h-4 text-primary bg-gray-700 border-gray-600 rounded focus:ring-primary focus:ring-2"
+                                                                    />
+                                                                    <span className="text-xs text-gray-300">Premium</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        
+                                        <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                                            <p className="text-blue-400 text-sm">
+                                                📅 {showForm.showtimes.length} show(s) configured across {new Set(showForm.showtimes.map(s => s.theaterId)).size} theater(s)
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={showForm.showtimes.length === 0}
+                                    className="btn-primary w-full py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Create {showForm.showtimes.length} Show(s)
+                                </button>
+                            </>
+                        )}
                     </form>
                 )}
             </div>

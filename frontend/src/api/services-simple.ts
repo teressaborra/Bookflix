@@ -11,6 +11,10 @@ export const showsApi = {
         const params = date ? `?movieId=${movieId}&date=${date}` : `?movieId=${movieId}`;
         return api.get(`/shows${params}`);
     },
+    getByTheater: (theaterId: number, date?: string) => {
+        const params = date ? `?theaterId=${theaterId}&date=${date}` : `?theaterId=${theaterId}`;
+        return api.get(`/shows${params}`);
+    },
     getSeats: (showId: number) => api.get(`/shows/${showId}/seats`)
 };
 
