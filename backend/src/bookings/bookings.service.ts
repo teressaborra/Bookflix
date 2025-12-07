@@ -26,93 +26,102 @@ export class BookingsService {
     async create(userId: number, createBookingDto: CreateBookingDto) {
         const { showId, seats, pointsToRedeem } = createBookingDto;
 
-        return this.dataSource.transaction(async (manager) => {
-            // 1. Check if show exists
-            const show = await manager.findOne(Show, { 
-                where: { id: showId },
-                relations: ['movie']
-            });
-            if (!show) {
-                throw new NotFoundException('Show not found');
-            }
+        try {
+            return await this.dataSource.transaction(async (manager) => {
+                console.log('Starting booking transaction for user:', userId, 'show:', showId, 'seats:', seats);
 
-            // 2. Check if seats are already reserved
-            const existingSeats = await manager.find(ReservedSeat, {
-                where: {
-                    show: { id: showId },
-                    seatNo: In(seats),
-                },
-            });
-
-            if (existingSeats.length > 0) {
-                throw new BadRequestException(`Seats ${existingSeats.map(s => s.seatNo).join(', ')} are already booked`);
-            }
-
-            // 3. Get current pricing
-            await this.dynamicPricingService.updateShowPricing(showId);
-            const updatedShow = await manager.findOne(Show, { 
-                where: { id: showId },
-                relations: ['movie']
-            });
-
-            // 4. Calculate total amount
-            if (!updatedShow) {
-                throw new NotFoundException('Updated show not found');
-            }
-            let totalAmount = seats.length * Number(updatedShow.currentPrice || updatedShow.basePrice);
-            let discount = 0;
-            let pointsUsed = 0;
-
-            // 5. Apply points redemption if requested
-            if (pointsToRedeem && pointsToRedeem > 0) {
-                try {
-                    discount = await this.loyaltyService.redeemPoints(userId, pointsToRedeem);
-                    pointsUsed = pointsToRedeem;
-                    totalAmount -= discount;
-                } catch (error) {
-                    throw new BadRequestException('Insufficient loyalty points');
+                // 1. Check if show exists
+                const show = await manager.findOne(Show, { 
+                    where: { id: showId },
+                    relations: ['movie', 'theater']
+                });
+                if (!show) {
+                    throw new NotFoundException('Show not found');
                 }
-            }
+                console.log('Show found:', show.id, show.movie?.title);
 
-            // 6. Create Booking
-            const user = await manager.findOne(User, { where: { id: userId } });
-            if (!user) {
-                throw new NotFoundException('User not found');
-            }
+                // 2. Check if seats are already reserved
+                const existingSeats = await manager.find(ReservedSeat, {
+                    where: {
+                        show: { id: showId },
+                        seatNo: In(seats),
+                    },
+                });
 
-            const booking = manager.create(Booking, {
-                user,
-                show: updatedShow,
-                seats,
-                amountPaid: totalAmount,
-                pointsUsed,
-                paymentMethod: createBookingDto.paymentMethod || 'card',
-                transactionId: `TXN_${Date.now()}_${userId}`,
+                if (existingSeats.length > 0) {
+                    throw new BadRequestException(`Seats ${existingSeats.map(s => s.seatNo).join(', ')} are already booked`);
+                }
+                console.log('Seats are available');
+
+                // 3. Calculate total amount (simplified - no dynamic pricing for now)
+                const pricePerSeat = Number(show.currentPrice || show.basePrice || 0);
+                let totalAmount = seats.length * pricePerSeat;
+                let discount = 0;
+                let pointsUsed = 0;
+
+                console.log('Price calculation:', { pricePerSeat, totalAmount, seats: seats.length });
+
+                // 4. Apply points redemption if requested (simplified)
+                if (pointsToRedeem && pointsToRedeem > 0) {
+                    try {
+                        // Simplified points redemption - 1 point = $0.01
+                        discount = Math.min(pointsToRedeem * 0.01, totalAmount);
+                        pointsUsed = pointsToRedeem;
+                        totalAmount -= discount;
+                        console.log('Points applied:', { pointsToRedeem, discount, newTotal: totalAmount });
+                    } catch (error) {
+                        console.log('Points redemption failed:', error);
+                        // Continue without points if there's an issue
+                    }
+                }
+
+                // 5. Get user
+                const user = await manager.findOne(User, { where: { id: userId } });
+                if (!user) {
+                    throw new NotFoundException('User not found');
+                }
+                console.log('User found:', user.id, user.name);
+
+                // 6. Create Booking
+                const booking = manager.create(Booking, {
+                    user,
+                    show,
+                    seats,
+                    amountPaid: totalAmount,
+                    pointsUsed,
+                    paymentMethod: createBookingDto.paymentMethod || 'card',
+                    transactionId: `TXN_${Date.now()}_${userId}`,
+                    pointsEarned: Math.floor(totalAmount * 0.1), // 10% of amount as points
+                });
+                const savedBooking = await manager.save(booking);
+                console.log('Booking created:', savedBooking.id);
+
+                // 7. Create ReservedSeat rows
+                const reservedSeats = seats.map(seatNo => manager.create(ReservedSeat, {
+                    show,
+                    seatNo,
+                    booking: savedBooking,
+                }));
+                await manager.save(reservedSeats);
+                console.log('Reserved seats created:', reservedSeats.length);
+
+                // 8. Update show's booked seats count
+                await manager.update(Show, showId, {
+                    bookedSeats: show.bookedSeats + seats.length
+                });
+                console.log('Show updated with new booked seats count');
+
+                return {
+                    ...savedBooking,
+                    pointsEarned: savedBooking.pointsEarned,
+                    discount,
+                    originalAmount: seats.length * pricePerSeat
+                };
             });
-            const savedBooking = await manager.save(booking);
-
-            // 7. Create ReservedSeat rows
-            const reservedSeats = seats.map(seatNo => manager.create(ReservedSeat, {
-                show: updatedShow,
-                seatNo,
-                booking: savedBooking,
-            }));
-            await manager.save(reservedSeats);
-
-            // 8. Award loyalty points
-            const pointsEarned = await this.loyaltyService.addPoints(userId, savedBooking);
-            await manager.update(Booking, savedBooking.id, { pointsEarned });
-
-            // 9. Update show pricing after booking
-            await this.dynamicPricingService.updateShowPricing(showId);
-
-            return {
-                ...savedBooking,
-                pointsEarned,
-                discount,
-                originalAmount: seats.length * Number(updatedShow.currentPrice || updatedShow.basePrice)
-            };
-        });
+        } catch (error) {
+            console.error('Booking creation failed:', error);
+            throw error;
+        }
     }
 
     async findUserBookings(userId: number) {

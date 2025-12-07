@@ -13,6 +13,30 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
+    const formatPrice = (price: any): string => {
+        try {
+            const numPrice = Number(price);
+            if (isNaN(numPrice)) {
+                return '0.00';
+            }
+            return numPrice.toFixed(2);
+        } catch (error) {
+            return '0.00';
+        }
+    };
+
+    const formatPercentage = (value: any, decimals: number = 1): string => {
+        try {
+            const numValue = Number(value);
+            if (isNaN(numValue)) {
+                return '0.0';
+            }
+            return numValue.toFixed(decimals);
+        } catch (error) {
+            return '0.0';
+        }
+    };
+
     useEffect(() => {
         loadPricingInfo();
 
@@ -28,7 +52,7 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
             setLastUpdate(new Date());
 
             if (onPriceUpdate) {
-                onPriceUpdate(response.data.currentPrice);
+                onPriceUpdate(Number(response.data.currentPrice) || 0);
             }
         } catch (error) {
             console.error('Error loading pricing info:', error);
@@ -40,8 +64,10 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
     const getPriceChangeIndicator = () => {
         if (!pricingInfo) return null;
 
-        const change = pricingInfo.currentPrice - pricingInfo.basePrice;
-        const changePercent = ((change / pricingInfo.basePrice) * 100);
+        const currentPrice = Number(pricingInfo.currentPrice) || 0;
+        const basePrice = Number(pricingInfo.basePrice) || 0;
+        const change = currentPrice - basePrice;
+        const changePercent = basePrice > 0 ? ((change / basePrice) * 100) : 0;
 
         if (Math.abs(changePercent) < 1) {
             return (
@@ -55,12 +81,12 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
         return change > 0 ? (
             <div className="flex items-center gap-1 text-red-400">
                 <TrendingUp className="w-4 h-4" />
-                <span className="text-sm">+{changePercent.toFixed(1)}%</span>
+                <span className="text-sm">+{formatPercentage(changePercent)}%</span>
             </div>
         ) : (
             <div className="flex items-center gap-1 text-green-400">
                 <TrendingDown className="w-4 h-4" />
-                <span className="text-sm">{changePercent.toFixed(1)}%</span>
+                <span className="text-sm">{formatPercentage(changePercent)}%</span>
             </div>
         );
     };
@@ -132,13 +158,13 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
                     <div className="text-sm text-muted mb-1">Current Price</div>
                     <div className="flex items-center gap-3">
                         <span className="text-3xl font-bold text-primary">
-                            ${pricingInfo.currentPrice.toFixed(2)}
+                            ${formatPrice(pricingInfo.currentPrice)}
                         </span>
                         {getPriceChangeIndicator()}
                     </div>
-                    {pricingInfo.currentPrice !== pricingInfo.basePrice && (
+                    {(Number(pricingInfo.currentPrice) || 0) !== (Number(pricingInfo.basePrice) || 0) && (
                         <div className="text-sm text-muted">
-                            Base price: ${pricingInfo.basePrice.toFixed(2)}
+                            Base price: ${formatPrice(pricingInfo.basePrice)}
                         </div>
                     )}
                 </div>
@@ -149,7 +175,7 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
                         {demand.level} Demand
                     </div>
                     <div className="text-xs text-muted mt-1">
-                        {(pricingInfo.occupancyRate * 100).toFixed(1)}% full
+                        {formatPercentage(pricingInfo.occupancyRate * 100)}% full
                     </div>
                 </div>
             </div>
@@ -158,7 +184,7 @@ const DynamicPricing: React.FC<DynamicPricingProps> = ({ showId, onPriceUpdate }
             <div>
                 <div className="flex justify-between text-sm mb-2">
                     <span>Seat Availability</span>
-                    <span>{(pricingInfo.occupancyRate * 100).toFixed(1)}% booked</span>
+                    <span>{formatPercentage(pricingInfo.occupancyRate * 100)}% booked</span>
                 </div>
                 <div className="w-full bg-gray-700 rounded-full h-2">
                     <div

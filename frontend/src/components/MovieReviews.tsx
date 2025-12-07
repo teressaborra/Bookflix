@@ -3,19 +3,29 @@ import { reviewsApi } from '../api/services';
 import type { MovieReview } from '../types';
 import { Star, MessageCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 interface MovieReviewsProps {
     movieId: number;
-    averageRating: number;
+    averageRating: number | null | undefined;
     totalReviews: number;
 }
 
 const MovieReviews: React.FC<MovieReviewsProps> = ({
     movieId,
-    averageRating,
-    totalReviews
+    averageRating = 0,
+    totalReviews = 0
 }) => {
+    // Ensure averageRating is always a number
+    const safeAverageRating = typeof averageRating === 'number' && !isNaN(averageRating) ? averageRating : 0;
+    const safeTotalReviews = typeof totalReviews === 'number' && !isNaN(totalReviews) ? totalReviews : 0;
+
+    // Early return if there's an issue with the data
+    if (!movieId) {
+        return null; // Don't render anything instead of blocking
+    }
     const { user } = useAuth();
+    const { showSuccess, showError } = useNotification();
     const [reviews, setReviews] = useState<MovieReview[]>([]);
     const [loading, setLoading] = useState(true);
     const [showReviewForm, setShowReviewForm] = useState(false);
@@ -29,9 +39,11 @@ const MovieReviews: React.FC<MovieReviewsProps> = ({
     const loadReviews = async () => {
         try {
             const response = await reviewsApi.getMovieReviews(movieId);
-            setReviews(response.data);
+            setReviews(response.data || []);
         } catch (error) {
             console.error('Error loading reviews:', error);
+            // Don't block the UI, just show empty reviews
+            setReviews([]);
         } finally {
             setLoading(false);
         }
@@ -47,8 +59,12 @@ const MovieReviews: React.FC<MovieReviewsProps> = ({
             setNewReview({ rating: 5, comment: '' });
             setShowReviewForm(false);
             loadReviews(); // Reload reviews
+            // Show success message
+            showSuccess('Review Submitted', 'Your review has been posted successfully!');
         } catch (error) {
             console.error('Error submitting review:', error);
+            // Don't block the UI, just show error
+            showError('Review Failed', 'Failed to submit review. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -109,11 +125,11 @@ const MovieReviews: React.FC<MovieReviewsProps> = ({
                 {/* Overall Rating */}
                 <div className="flex items-center gap-4 p-4 bg-dark/50 rounded-lg mb-6">
                     <div className="text-center">
-                        <div className="text-3xl font-bold text-primary">{averageRating ? averageRating.toFixed(1) : '0.0'}</div>
+                        <div className="text-3xl font-bold text-primary">{safeAverageRating.toFixed(1)}</div>
                         <div className="flex justify-center mb-1">
-                            {renderStars(Math.round(averageRating))}
+                            {renderStars(Math.round(safeAverageRating))}
                         </div>
-                        <div className="text-sm text-muted">{totalReviews} reviews</div>
+                        <div className="text-sm text-muted">{safeTotalReviews} reviews</div>
                     </div>
 
                     {/* Rating Distribution */}

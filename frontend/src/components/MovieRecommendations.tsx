@@ -106,10 +106,10 @@ const MovieRecommendations: React.FC<MovieRecommendationsProps> = ({ currentMovi
                 {/* Movie Info Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="flex items-center gap-2 mb-2">
-                        {movie.averageRating > 0 && (
+                        {Number(movie.averageRating || 0) > 0 && (
                             <div className="flex items-center gap-1 bg-black/50 rounded px-2 py-1">
                                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                <span className="text-xs font-medium">{movie.averageRating.toFixed(1)}</span>
+                                <span className="text-xs font-medium">{Number(movie.averageRating || 0).toFixed(1)}</span>
                             </div>
                         )}
                         {movie.isNewRelease && (

@@ -51,11 +51,11 @@ const SimpleMovieCard = ({ movie }) => {
                 )}
 
                 {/* Rating */}
-                {movie.averageRating > 0 && (
+                {Number(movie.averageRating || 0) > 0 && (
                     <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-2 py-1">
                         <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                            <span className="text-white text-sm font-medium">{movie.averageRating.toFixed(1)}</span>
+                            <span className="text-white text-sm font-medium">{Number(movie.averageRating || 0).toFixed(1)}</span>
                         </div>
                     </div>
                 )}
@@ -159,8 +159,8 @@ const HomeClean = () => {
     const nowShowingMovies = movies.filter(movie => !movie.isNewRelease).slice(0, 8);
     const comingSoonMovies = movies.filter(movie => movie.isNewRelease).slice(0, 4);
     const topRatedMovies = movies
-        .filter(movie => movie.averageRating >= 4.0)
-        .sort((a, b) => b.averageRating - a.averageRating)
+        .filter(movie => Number(movie.averageRating || 0) >= 4.0)
+        .sort((a, b) => Number(b.averageRating || 0) - Number(a.averageRating || 0))
         .slice(0, 6);
 
     return (

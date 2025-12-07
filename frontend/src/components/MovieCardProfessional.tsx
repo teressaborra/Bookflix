@@ -81,7 +81,7 @@ const MovieCardProfessional = ({ movie }) => {
                             NEW
                         </span>
                     )}
-                    {movie.averageRating >= 4.5 && (
+                    {Number(movie.averageRating || 0) >= 4.5 && (
                         <span className="bg-yellow-500 text-black px-2 py-1 rounded-full text-xs font-bold">
                             ⭐ TOP RATED
                         </span>
@@ -89,11 +89,11 @@ const MovieCardProfessional = ({ movie }) => {
                 </div>
 
                 {/* Rating Badge */}
-                {movie.averageRating > 0 && (
+                {Number(movie.averageRating || 0) > 0 && (
                     <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-2 py-1">
                         <div className="flex items-center gap-1">
                             <Star className={`w-4 h-4 ${getRatingColor(movie.averageRating)} fill-current`} />
-                            <span className="text-white text-sm font-medium">{movie.averageRating.toFixed(1)}</span>
+                            <span className="text-white text-sm font-medium">{Number(movie.averageRating || 0).toFixed(1)}</span>
                         </div>
                     </div>
                 )}

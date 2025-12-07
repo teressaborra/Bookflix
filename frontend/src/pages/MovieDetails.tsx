@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import type { Movie, Show } from '../types';
 import MovieReviews from '../components/MovieReviews';
@@ -12,11 +12,13 @@ import {
     Subtitles,
     Eye,
     TrendingUp,
-    Zap
+    Zap,
+    ArrowLeft
 } from 'lucide-react';
 
 const MovieDetails = () => {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [movie, setMovie] = useState<Movie | null>(null);
     const [shows, setShows] = useState<Show[]>([]);
     const [loading, setLoading] = useState(true);
@@ -47,8 +49,19 @@ const MovieDetails = () => {
 
     return (
         <div className="bg-[#0f1014] min-h-screen text-gray-300 font-sans">
+            {/* Go Back Button */}
+            <div className="relative z-20 p-4">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-black/20 hover:bg-black/40 px-4 py-2 rounded-lg backdrop-blur-sm"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Go Back
+                </button>
+            </div>
+
             {/* Immersive Hero Section */}
-            <div className="relative w-full h-[70vh]">
+            <div className="relative w-full h-[70vh] -mt-16 pt-16">
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                     style={{ backgroundImage: `url(${movie.posterUrl})` }}
@@ -80,15 +93,15 @@ const MovieDetails = () => {
                             </h1>
 
                             <div className="flex flex-wrap items-center gap-8 mb-8">
-                                {movie.averageRating > 0 && (
+                                {Number(movie.averageRating || 0) > 0 && (
                                     <div className="flex items-center gap-2">
                                         <div className="flex text-yellow-500">
                                             {[...Array(5)].map((_, i) => (
-                                                <Star key={i} className={`w-5 h-5 ${i < Math.round(movie.averageRating) ? 'fill-current' : 'text-gray-600'}`} />
+                                                <Star key={i} className={`w-5 h-5 ${i < Math.round(Number(movie.averageRating || 0)) ? 'fill-current' : 'text-gray-600'}`} />
                                             ))}
                                         </div>
-                                        <span className="text-white font-bold text-lg">{movie.averageRating.toFixed(1)}</span>
-                                        <span className="text-sm text-gray-500">({movie.totalReviews} reviews)</span>
+                                        <span className="text-white font-bold text-lg">{Number(movie.averageRating || 0).toFixed(1)}</span>
+                                        <span className="text-sm text-gray-500">({movie.totalReviews || 0} reviews)</span>
                                     </div>
                                 )}
                                 <div className="flex items-center gap-4">
@@ -137,7 +150,7 @@ const MovieDetails = () => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {shows.map((show) => (
+                                {shows.filter(show => show && show.id).map((show) => (
                                     <div key={show.id} className="group bg-[#1a1d26] border border-white/5 p-6 rounded-xl hover:border-red-600/50 transition-all hover:bg-[#1f222e]">
                                         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                                             {/* Time & Date */}
@@ -170,9 +183,21 @@ const MovieDetails = () => {
                                             <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                                                 <div className="text-right">
                                                     <div className="text-xl font-bold text-white">
-                                                        ${show.currentPrice ? show.currentPrice.toFixed(2) : show.basePrice?.toFixed(2) || '0.00'}
+                                                        ${(() => {
+                                                            try {
+                                                                if (show.currentPrice && typeof show.currentPrice === 'number') {
+                                                                    return show.currentPrice.toFixed(2);
+                                                                } else if (show.basePrice && typeof show.basePrice === 'number') {
+                                                                    return show.basePrice.toFixed(2);
+                                                                } else {
+                                                                    return '0.00';
+                                                                }
+                                                            } catch (error) {
+                                                                return '0.00';
+                                                            }
+                                                        })()}
                                                     </div>
-                                                    {show.currentPrice !== show.basePrice && (
+                                                    {show.currentPrice && show.basePrice && show.currentPrice !== show.basePrice && (
                                                         <div className="text-xs text-orange-400 flex items-center justify-end gap-1">
                                                             <TrendingUp className="w-3 h-3" /> Dynamic
                                                         </div>
@@ -192,11 +217,14 @@ const MovieDetails = () => {
                         )}
                     </div>
 
-                    <MovieReviews
-                        movieId={movie.id}
-                        averageRating={movie.averageRating}
-                        totalReviews={movie.totalReviews}
-                    />
+                    {/* Reviews Section - Always show, handle errors gracefully */}
+                    <div className="reviews-section">
+                        <MovieReviews
+                            movieId={movie.id}
+                            averageRating={movie.averageRating || 0}
+                            totalReviews={movie.totalReviews || 0}
+                        />
+                    </div>
                 </div>
 
                 {/* Right Column: Info & Recommendations */}

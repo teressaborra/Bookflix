@@ -44,6 +44,8 @@ const Login = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             className="input-field"
                             placeholder="you@example.com"
+                            autoComplete="email"
+                            data-lpignore="true"
                             required
                         />
                     </div>
@@ -55,6 +57,8 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             className="input-field"
                             placeholder="••••••••"
+                            autoComplete="current-password"
+                            data-lpignore="true"
                             required
                         />
                     </div>

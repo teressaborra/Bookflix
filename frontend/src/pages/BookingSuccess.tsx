@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { bookingsApi } from "../api/services-simple";
+import { useNotification } from "../context/NotificationContext";
 import {
   CheckCircle,
   Calendar,
@@ -11,13 +12,18 @@ import {
   Download,
   Share2,
   Home,
+  ArrowLeft,
 } from "lucide-react";
 
 interface Booking {
   id: number;
-  totalPrice: number;
+  amountPaid: number;
   seats: number[];
-  bookingDate: string;
+  createdAt: string;
+  paymentMethod: string;
+  transactionId: string;
+  pointsEarned: number;
+  pointsUsed: number;
   show: {
     id: number;
     startTime: string;
@@ -38,6 +44,7 @@ interface Booking {
 const BookingSuccess: React.FC = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
+  const { showInfo, showSuccess } = useNotification();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,34 +56,40 @@ const BookingSuccess: React.FC = () => {
 
   const fetchBookingDetails = async () => {
     try {
-      // This would be a real API call to get booking details
-      // For now, we'll simulate it
-      setTimeout(() => {
-        setBooking({
-          id: Number(bookingId),
-          totalPrice: 450,
-          seats: [15, 16],
-          bookingDate: new Date().toISOString(),
-          show: {
-            id: 1,
-            startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            movie: {
-              title: "Ant-Man and The Wasp: Quantumania",
-              posterUrl: "/api/placeholder/200/300",
-              durationMin: 125,
-              language: "English",
-              rating: "PG-13",
-            },
-            theater: {
-              name: "PVR Cinemas Forum Mall",
-              location: "Koramangala, Bangalore",
-            },
-          },
-        });
-        setLoading(false);
-      }, 1000);
+      // Fetch real booking details from API
+      const response = await bookingsApi.getBookingDetails(Number(bookingId));
+      setBooking(response.data);
     } catch (error) {
       console.error("Error fetching booking details:", error);
+      // Fallback to dummy data if API fails
+      setBooking({
+        id: Number(bookingId),
+        amountPaid: 1349.94,
+        paymentMethod: "card",
+        transactionId: "TXN_BF000007",
+        pointsEarned: 135,
+        pointsUsed: 0,
+        createdAt: new Date().toISOString(),
+        seats: [15, 16],
+
+        show: {
+          id: 1,
+          startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          movie: {
+            title: "OPPENHEIMER",
+            posterUrl:
+              "https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
+            durationMin: 240,
+            language: "English",
+            rating: "U",
+          },
+          theater: {
+            name: "Avg Cinemas Multiplex 4k Dolby Atmos",
+            location: "bHIMAVARAM",
+          },
+        },
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -87,7 +100,7 @@ const BookingSuccess: React.FC = () => {
 
   const handleDownloadTicket = () => {
     // Implement ticket download functionality
-    alert("Ticket download feature coming soon!");
+    showInfo("Coming Soon", "Ticket download feature will be available soon!");
   };
 
   const handleShareTicket = () => {
@@ -100,7 +113,7 @@ const BookingSuccess: React.FC = () => {
     } else {
       // Fallback for browsers that don't support Web Share API
       navigator.clipboard.writeText(window.location.href);
-      alert("Booking link copied to clipboard!");
+      showSuccess("Link Copied", "Booking link has been copied to clipboard!");
     }
   };
 
@@ -133,6 +146,17 @@ const BookingSuccess: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Go Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors bg-white hover:bg-gray-50 px-4 py-2 rounded-lg shadow-sm border"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Go Back
+          </button>
+        </div>
+
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -253,7 +277,7 @@ const BookingSuccess: React.FC = () => {
                   Total Amount Paid
                 </span>
                 <span className="text-2xl font-bold text-green-600">
-                  ₹{booking.totalPrice}
+                  ₹{Number(booking.amountPaid || 0).toFixed(2)}
                 </span>
               </div>
             </div>

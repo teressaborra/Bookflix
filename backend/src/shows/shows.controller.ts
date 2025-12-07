@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ShowsService } from './shows.service';
 import { CreateShowDto } from './dto/create-show.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -38,5 +38,19 @@ export class ShowsController {
     @Get(':id/seats')
     getSeats(@Param('id') id: string) {
         return this.showsService.getSeats(+id);
+    }
+
+    @Put(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    update(@Param('id') id: string, @Body() updateShowDto: CreateShowDto) {
+        return this.showsService.update(+id, updateShowDto);
+    }
+
+    @Delete(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    remove(@Param('id') id: string) {
+        return this.showsService.remove(+id);
     }
 }

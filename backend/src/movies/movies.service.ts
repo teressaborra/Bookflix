@@ -23,4 +23,17 @@ export class MoviesService {
     findOne(id: number) {
         return this.moviesRepository.findOne({ where: { id } });
     }
+
+    async update(id: number, updateMovieDto: CreateMovieDto) {
+        await this.moviesRepository.update(id, updateMovieDto);
+        return this.findOne(id);
+    }
+
+    async remove(id: number) {
+        const movie = await this.findOne(id);
+        if (movie) {
+            await this.moviesRepository.remove(movie);
+        }
+        return { message: 'Movie deleted successfully', id };
+    }
 }

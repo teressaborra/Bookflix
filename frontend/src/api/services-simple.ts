@@ -22,8 +22,14 @@ export const bookingsApi = {
     create: (showId: number, seats: number[]) =>
         api.post('/bookings', { showId, seats }),
     
+    createBooking: (showId: number, seats: number[], pointsToRedeem?: number, paymentMethod?: string) =>
+        api.post('/bookings', { showId, seats, pointsToRedeem, paymentMethod }),
+    
     getUserBookings: () =>
-        api.get('/users/me/bookings')
+        api.get('/users/me/bookings'),
+    
+    getBookingDetails: (bookingId: number) =>
+        api.get(`/bookings/${bookingId}`)
 };
 
 export const theatersApi = {

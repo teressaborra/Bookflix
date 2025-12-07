@@ -49,7 +49,13 @@ const TheaterMovies: React.FC = () => {
     const [theater, setTheater] = useState<Theater | null>(null);
     const [shows, setShows] = useState<Show[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    });
 
     useEffect(() => {
         if (theaterId) {
@@ -182,31 +188,139 @@ const TheaterMovies: React.FC = () => {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Date Selection */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Date</h3>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                        {getNextSevenDays().map((date, index) => (
+                {/* Enhanced Date Selection */}
+                <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-xl font-bold text-gray-800 flex items-center">
+                                <Calendar className="w-5 h-5 mr-2 text-red-600" />
+                                Select Show Date
+                            </h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Choose a date to view available showtimes
+                            </p>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-sm font-medium text-gray-800">
+                                {new Date(selectedDate).toLocaleDateString('en-US', { 
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </div>
+                            <div className="text-xs text-gray-500">Selected Date</div>
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-7 gap-3">
+                        {getNextSevenDays().map((date, index) => {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            const dateString = `${year}-${month}-${day}`;
+                            const isSelected = selectedDate === dateString;
+                            const isToday = index === 0;
+                            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                            
+                            return (
+                                <button
+                                    key={index}
+                                    onClick={() => {
+                                        const year = date.getFullYear();
+                                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                                        const day = String(date.getDate()).padStart(2, '0');
+                                        setSelectedDate(`${year}-${month}-${day}`);
+                                    }}
+                                    className={`relative p-4 rounded-xl text-center transition-all duration-200 transform hover:scale-105 ${
+                                        isSelected
+                                            ? 'bg-gradient-to-br from-red-600 to-red-700 text-white shadow-lg'
+                                            : isWeekend
+                                            ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                    }`}
+                                >
+                                    {isToday && (
+                                        <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                                            Today
+                                        </div>
+                                    )}
+                                    
+                                    <div className={`text-xs font-medium mb-1 ${
+                                        isSelected ? 'text-red-100' : isWeekend ? 'text-blue-600' : 'text-gray-500'
+                                    }`}>
+                                        {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                    </div>
+                                    
+                                    <div className={`text-2xl font-bold mb-1 ${
+                                        isSelected ? 'text-white' : isWeekend ? 'text-blue-800' : 'text-gray-800'
+                                    }`}>
+                                        {date.getDate()}
+                                    </div>
+                                    
+                                    <div className={`text-xs ${
+                                        isSelected ? 'text-red-200' : isWeekend ? 'text-blue-500' : 'text-gray-500'
+                                    }`}>
+                                        {date.toLocaleDateString('en-US', { month: 'short' })}
+                                    </div>
+                                    
+                                    {isWeekend && !isSelected && (
+                                        <div className="text-xs text-blue-600 font-medium mt-1">
+                                            Weekend
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    
+                    {/* Quick Date Actions */}
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                        <div className="flex gap-2">
                             <button
-                                key={index}
-                                onClick={() => setSelectedDate(date.toISOString().split('T')[0])}
-                                className={`flex-shrink-0 px-4 py-3 rounded-lg text-center min-w-[80px] transition-colors ${
-                                    selectedDate === date.toISOString().split('T')[0]
-                                        ? 'bg-red-600 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
+                                onClick={() => {
+                                    const today = new Date();
+                                    const year = today.getFullYear();
+                                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                                    const day = String(today.getDate()).padStart(2, '0');
+                                    setSelectedDate(`${year}-${month}-${day}`);
+                                }}
+                                className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
                             >
-                                <div className="text-xs font-medium">
-                                    {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                                </div>
-                                <div className="text-sm font-bold">
-                                    {date.getDate()}
-                                </div>
-                                <div className="text-xs">
-                                    {date.toLocaleDateString('en-US', { month: 'short' })}
-                                </div>
+                                Today
                             </button>
-                        ))}
+                            <button
+                                onClick={() => {
+                                    const tomorrow = new Date();
+                                    tomorrow.setDate(tomorrow.getDate() + 1);
+                                    const year = tomorrow.getFullYear();
+                                    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+                                    const day = String(tomorrow.getDate()).padStart(2, '0');
+                                    setSelectedDate(`${year}-${month}-${day}`);
+                                }}
+                                className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                            >
+                                Tomorrow
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const nextWeekend = new Date();
+                                    const daysUntilSaturday = (6 - nextWeekend.getDay()) % 7;
+                                    nextWeekend.setDate(nextWeekend.getDate() + (daysUntilSaturday || 7));
+                                    const year = nextWeekend.getFullYear();
+                                    const month = String(nextWeekend.getMonth() + 1).padStart(2, '0');
+                                    const day = String(nextWeekend.getDate()).padStart(2, '0');
+                                    setSelectedDate(`${year}-${month}-${day}`);
+                                }}
+                                className="px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+                            >
+                                Weekend
+                            </button>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500">
+                            Showing next 7 days
+                        </div>
                     </div>
                 </div>
 

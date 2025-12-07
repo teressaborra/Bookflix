@@ -23,7 +23,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
                 {/* Rating Badge */}
                 <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-white text-xs font-bold border border-white/10">
-                    {movie.averageRating.toFixed(1)}
+                    {Number(movie.averageRating || 0).toFixed(1)}
                 </div>
             </div>
 

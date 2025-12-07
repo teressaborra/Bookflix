@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
-import { bookingsApi, loyaltyApi } from '../api/services';
+import { bookingsApi } from '../api/services-simple';
 import type { Show, UserPoints } from '../types';
+import { useNotification } from '../context/NotificationContext';
 import SeatSelection from '../components/SeatSelection';
 import DynamicPricing from '../components/DynamicPricing';
 import { 
@@ -16,12 +17,14 @@ import {
     Banknote,
     Shield,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
+    ArrowLeft
 } from 'lucide-react';
 
 const Booking = () => {
     const { showId } = useParams<{ showId: string }>();
     const navigate = useNavigate();
+    const { showError } = useNotification();
     const [show, setShow] = useState<Show | null>(null);
     const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
     const [currentPrice, setCurrentPrice] = useState<number>(0);
@@ -37,11 +40,11 @@ const Booking = () => {
             try {
                 const [showRes, pointsRes] = await Promise.all([
                     api.get(`/shows/${showId}`),
-                    loyaltyApi.getUserPoints().catch(() => ({ data: null }))
+                    api.get('/loyalty/points').catch(() => ({ data: null }))
                 ]);
                 
                 setShow(showRes.data);
-                setCurrentPrice(showRes.data.currentPrice || showRes.data.basePrice);
+                setCurrentPrice(Number(showRes.data.currentPrice) || Number(showRes.data.basePrice) || 0);
                 setUserPoints(pointsRes.data);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -57,17 +60,46 @@ const Booking = () => {
     };
 
     const handlePriceUpdate = (price: number) => {
-        setCurrentPrice(price);
+        setCurrentPrice(Number(price) || 0);
+    };
+
+    const formatPrice = (price: any): string => {
+        try {
+            const numPrice = Number(price);
+            if (isNaN(numPrice)) {
+                return '0.00';
+            }
+            return numPrice.toFixed(2);
+        } catch (error) {
+            return '0.00';
+        }
     };
 
     const calculateTotal = () => {
-        const subtotal = selectedSeats.length * currentPrice;
+        const subtotal = selectedSeats.length * (Number(currentPrice) || 0);
         const discount = pointsToRedeem * 0.01; // 1 point = $0.01
         return Math.max(0, subtotal - discount);
     };
 
     const handleBooking = async () => {
         if (selectedSeats.length === 0) return;
+
+        // Scroll to top for better UX
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Payment validation
+        const totalAmount = calculateTotal();
+        if (totalAmount <= 0) {
+            showError('Invalid Amount', 'Booking amount is invalid. Please try again.');
+            return;
+        }
+
+        // Simulate payment processing
+        const paymentConfirmed = await simulatePayment(totalAmount, paymentMethod);
+        if (!paymentConfirmed) {
+            showError('Payment Failed', 'Payment could not be processed. Please try again or use a different payment method.');
+            return;
+        }
 
         setBooking(true);
         try {
@@ -82,16 +114,31 @@ const Booking = () => {
             const bookingId = response.data?.id || Math.floor(Math.random() * 1000000);
             navigate(`/booking-success/${bookingId}`);
         } catch (error: any) {
-            alert(error.response?.data?.message || 'Booking failed. Please try again.');
+            showError('Booking Failed', error.response?.data?.message || 'Booking failed. Please try again.');
         } finally {
             setBooking(false);
         }
     };
 
+    const simulatePayment = async (amount: number, method: string): Promise<boolean> => {
+        // Simulate payment processing delay
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // Simulate 95% success rate
+                const success = Math.random() > 0.05;
+                if (success) {
+                    console.log(`Payment of $${amount.toFixed(2)} processed successfully via ${method}`);
+                } else {
+                    console.log(`Payment of $${amount.toFixed(2)} failed via ${method}`);
+                }
+                resolve(success);
+            }, 2000); // 2 second delay to simulate processing
+        });
+    };
+
     const paymentMethods = [
         { id: 'card', name: 'Credit/Debit Card', icon: CreditCard },
-        { id: 'mobile', name: 'Mobile Payment', icon: Smartphone },
-        { id: 'cash', name: 'Pay at Counter', icon: Banknote }
+        { id: 'mobile', name: 'Mobile Payment', icon: Smartphone }
     ];
 
     if (loading || !show) {
@@ -135,6 +182,17 @@ const Booking = () => {
     return (
         <div className="min-h-screen bg-dark py-8">
             <div className="max-w-7xl mx-auto px-4">
+                {/* Go Back Button */}
+                <div className="mb-6">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        Go Back
+                    </button>
+                </div>
+
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-4 mb-4">
@@ -194,7 +252,10 @@ const Booking = () => {
                                 {selectedSeats.length > 0 && (
                                     <div className="flex justify-end">
                                         <button
-                                            onClick={() => setStep('payment')}
+                                            onClick={() => {
+                                                setStep('payment');
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                            }}
                                             className="btn-primary"
                                         >
                                             Continue to Payment
@@ -237,12 +298,12 @@ const Booking = () => {
                                         <div className="flex items-center gap-4">
                                             <div className="flex-1">
                                                 <div className="text-sm text-muted mb-2">
-                                                    Available: {userPoints.availablePoints} points (${(userPoints.availablePoints * 0.01).toFixed(2)})
+                                                    Available: {userPoints?.availablePoints || 0} points (${((userPoints?.availablePoints || 0) * 0.01).toFixed(2)})
                                                 </div>
                                                 <input
                                                     type="range"
                                                     min="0"
-                                                    max={Math.min(userPoints.availablePoints, selectedSeats.length * currentPrice * 100)}
+                                                    max={Math.min(userPoints?.availablePoints || 0, selectedSeats.length * (Number(currentPrice) || 0) * 100)}
                                                     value={pointsToRedeem}
                                                     onChange={(e) => setPointsToRedeem(Number(e.target.value))}
                                                     className="w-full"
@@ -269,7 +330,7 @@ const Booking = () => {
                                         disabled={booking || selectedSeats.length === 0}
                                         className="btn-primary flex-1 disabled:opacity-50"
                                     >
-                                        {booking ? 'Processing...' : 'Confirm Booking'}
+                                        {booking ? 'Processing Payment...' : `Pay ${formatPrice(calculateTotal())}`}
                                     </button>
                                 </div>
                             </div>
@@ -295,11 +356,11 @@ const Booking = () => {
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Price per seat:</span>
-                                    <span>${currentPrice.toFixed(2)}</span>
+                                    <span>${formatPrice(currentPrice)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Subtotal:</span>
-                                    <span>${(selectedSeats.length * currentPrice).toFixed(2)}</span>
+                                    <span>${formatPrice(selectedSeats.length * (Number(currentPrice) || 0))}</span>
                                 </div>
                                 {pointsToRedeem > 0 && (
                                     <div className="flex justify-between text-green-400">
@@ -310,7 +371,7 @@ const Booking = () => {
                                 <div className="border-t border-white/20 pt-3">
                                     <div className="flex justify-between text-lg font-bold">
                                         <span>Total:</span>
-                                        <span className="text-primary">${calculateTotal().toFixed(2)}</span>
+                                        <span className="text-primary">${formatPrice(calculateTotal())}</span>
                                     </div>
                                 </div>
                             </div>

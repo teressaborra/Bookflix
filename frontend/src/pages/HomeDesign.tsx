@@ -9,6 +9,7 @@ const HomeDesign = () => {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [nowShowingSlide, setNowShowingSlide] = useState(0);
 
     useEffect(() => {
         const fetchMovies = async () => {
@@ -25,18 +26,29 @@ const HomeDesign = () => {
     }, []);
 
     const featuredMovie = movies[0] || {
-        title: "Ant-Man and The Wasp: Quantumania",
-        description: "Super-Hero partners Scott Lang and Hope Van Dyne return to continue their adventures as Ant-Man and the Wasp.",
-        posterUrl: "https://image.tmdb.org/t/p/w500/ngl2FKBlU4fhbdsrtdom9LVLBXw.jpg",
-        genre: "Action, Adventure, Comedy",
-        rating: "PG-13",
-        durationMin: 125
+        title: "Your Next Movie Experience",
+        description: "Discover thousands of movies and shows. Book your perfect seats at premium theaters with the best prices and exclusive deals.",
+        posterUrl: "https://i.pinimg.com/736x/0a/a3/3c/0aa33c4c483f63a5a1ec383457aa0f98.jpg",
+        genre: "All Genres Available",
+        rating: "All Ratings",
+        durationMin: 120
     };
 
     // Safely filter movies with default values
-    const nowShowingMovies = movies.filter(movie => !movie.isNewRelease).slice(0, 4);
+    const allNowShowingMovies = movies.filter(movie => !movie.isNewRelease);
+    const nowShowingMovies = allNowShowingMovies.slice(nowShowingSlide * 4, (nowShowingSlide + 1) * 4);
     const comingSoonMovies = movies.filter(movie => movie.isNewRelease).slice(0, 4);
     const latestNews = movies.slice(0, 4);
+
+    const maxNowShowingSlides = Math.ceil(allNowShowingMovies.length / 4);
+
+    const nextNowShowingSlide = () => {
+        setNowShowingSlide((prev) => (prev + 1) % maxNowShowingSlides);
+    };
+
+    const prevNowShowingSlide = () => {
+        setNowShowingSlide((prev) => (prev - 1 + maxNowShowingSlides) % maxNowShowingSlides);
+    };
 
     return (
         <div className="min-h-screen bg-dark">
@@ -47,7 +59,7 @@ const HomeDesign = () => {
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                     style={{
                         backgroundImage: `url(${featuredMovie.posterUrl})`,
-                        filter: 'brightness(0.3)'
+                        filter: 'brightness(0.4)'
                     }}
                 />
                 
@@ -59,7 +71,7 @@ const HomeDesign = () => {
                             <div className="text-white space-y-6">
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-4 text-sm">
-                                        <span className="bg-primary px-3 py-1 rounded-full font-bold">NEW RELEASE</span>
+                                        <span className="bg-primary px-3 py-1 rounded-full font-bold">BOOKFLIX</span>
                                         <span className="text-gray-300">{featuredMovie.genre}</span>
                                     </div>
                                     <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
@@ -70,13 +82,13 @@ const HomeDesign = () => {
                                 <div className="flex items-center gap-6 text-sm">
                                     <div className="flex items-center gap-2">
                                         <Star className="w-5 h-5 text-yellow-400 fill-current" />
-                                        <span>8.5/10</span>
+                                        <span>Premium Experience</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="w-5 h-5" />
-                                        <span>{Math.floor(featuredMovie.durationMin / 60)}h {featuredMovie.durationMin % 60}m</span>
+                                        <span>24/7 Booking</span>
                                     </div>
-                                    <span className="bg-gray-700 px-2 py-1 rounded">{featuredMovie.rating}</span>
+                                    <span className="bg-gray-700 px-2 py-1 rounded">Best Prices</span>
                                 </div>
                                 
                                 <p className="text-lg text-gray-300 max-w-lg leading-relaxed">
@@ -85,28 +97,43 @@ const HomeDesign = () => {
                                 
                                 <div className="flex gap-4 pt-4">
                                     <Link 
-                                        to={`/movies/${featuredMovie.id}`}
+                                        to="/theaters"
                                         className="bg-primary hover:bg-red-700 text-white px-8 py-4 rounded-lg font-bold flex items-center gap-3 transition-colors"
                                     >
                                         <Play className="w-5 h-5 fill-current" />
-                                        BOOK NOW
+                                        BROWSE MOVIES
                                     </Link>
-                                    <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold hover:bg-white hover:text-dark transition-colors">
-                                        WATCH TRAILER
-                                    </button>
+                                    <Link
+                                        to="/theaters"
+                                        className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold hover:bg-white hover:text-dark transition-colors"
+                                    >
+                                        VIEW THEATERS
+                                    </Link>
                                 </div>
                             </div>
                             
-                            {/* Right Side - Movie Poster */}
+                            {/* Right Side - Features */}
                             <div className="hidden lg:block">
-                                <div className="relative">
-                                    <img 
-                                        src={featuredMovie.posterUrl}
-                                        alt={featuredMovie.title}
-                                        className="w-full max-w-md mx-auto rounded-2xl shadow-2xl"
-                                    />
-                                    <div className="absolute -bottom-4 -right-4 bg-primary text-white p-4 rounded-full">
-                                        <Play className="w-8 h-8 fill-current" />
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20">
+                                        <div className="text-4xl mb-3">🎬</div>
+                                        <h3 className="text-xl font-bold mb-2">Latest Movies</h3>
+                                        <p className="text-gray-300 text-sm">Watch the newest releases in premium theaters</p>
+                                    </div>
+                                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20">
+                                        <div className="text-4xl mb-3">🎟️</div>
+                                        <h3 className="text-xl font-bold mb-2">Easy Booking</h3>
+                                        <p className="text-gray-300 text-sm">Book your seats in just a few clicks</p>
+                                    </div>
+                                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20">
+                                        <div className="text-4xl mb-3">💺</div>
+                                        <h3 className="text-xl font-bold mb-2">Best Seats</h3>
+                                        <p className="text-gray-300 text-sm">AI-powered seat recommendations</p>
+                                    </div>
+                                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20">
+                                        <div className="text-4xl mb-3">🎁</div>
+                                        <h3 className="text-xl font-bold mb-2">Rewards</h3>
+                                        <p className="text-gray-300 text-sm">Earn points with every booking</p>
                                     </div>
                                 </div>
                             </div>
@@ -123,17 +150,27 @@ const HomeDesign = () => {
                             <h2 className="text-4xl font-bold text-white mb-2">Now Showing</h2>
                             <p className="text-gray-400">Latest movies in theaters</p>
                         </div>
-                        <div className="flex gap-2">
-                            <button className="p-3 bg-card border border-white/20 rounded-lg hover:bg-white/10 transition-colors">
-                                <ChevronLeft className="w-5 h-5 text-white" />
-                            </button>
-                            <button className="p-3 bg-card border border-white/20 rounded-lg hover:bg-white/10 transition-colors">
-                                <ChevronRight className="w-5 h-5 text-white" />
-                            </button>
-                        </div>
+                        {maxNowShowingSlides > 1 && (
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={prevNowShowingSlide}
+                                    className="p-3 bg-card border border-white/20 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
+                                    disabled={nowShowingSlide === 0}
+                                >
+                                    <ChevronLeft className="w-5 h-5 text-white" />
+                                </button>
+                                <button 
+                                    onClick={nextNowShowingSlide}
+                                    className="p-3 bg-card border border-white/20 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
+                                    disabled={nowShowingSlide === maxNowShowingSlides - 1}
+                                >
+                                    <ChevronRight className="w-5 h-5 text-white" />
+                                </button>
+                            </div>
+                        )}
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         {nowShowingMovies.length > 0 ? nowShowingMovies.map((movie, index) => (
                             <div key={index} className="group relative bg-card rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all duration-300">
                                 <div className="aspect-[2/3] relative overflow-hidden">
@@ -180,6 +217,21 @@ const HomeDesign = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* Slide Indicators */}
+                    {maxNowShowingSlides > 1 && (
+                        <div className="flex justify-center gap-2">
+                            {Array.from({ length: maxNowShowingSlides }).map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setNowShowingSlide(index)}
+                                    className={`w-3 h-3 rounded-full transition-colors ${
+                                        index === nowShowingSlide ? 'bg-primary' : 'bg-white/30'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

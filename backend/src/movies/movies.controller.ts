@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -25,5 +25,19 @@ export class MoviesController {
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.moviesService.findOne(+id);
+    }
+
+    @Put(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    update(@Param('id') id: string, @Body() updateMovieDto: CreateMovieDto) {
+        return this.moviesService.update(+id, updateMovieDto);
+    }
+
+    @Delete(':id')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN)
+    remove(@Param('id') id: string) {
+        return this.moviesService.remove(+id);
     }
 }

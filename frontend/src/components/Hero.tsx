@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Star, ChevronRight, ChevronLeft } from 'lucide-react';
+import bgImage from '../assets/images/bg.png';
 
 const Hero = () => {
     const [selectedDate, setSelectedDate] = useState(0);
@@ -21,7 +22,7 @@ const Hero = () => {
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
                     style={{
-                        backgroundImage: 'url("https://image.tmdb.org/t/p/original/xOMo8BRK7PfcJv9JCnx7s5hj0PX.jpg")', // Dune Background
+                        backgroundImage: `url(${bgImage})`,
                     }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />

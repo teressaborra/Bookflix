@@ -39,7 +39,7 @@ const HomeWorking = () => {
     const genres = ['All', ...Array.from(new Set(movies.map(movie => movie.genre)))];
 
     const featuredMovies = movies
-        .filter(movie => movie.averageRating >= 4.0 || movie.isNewRelease)
+        .filter(movie => Number(movie.averageRating || 0) >= 4.0 || movie.isNewRelease)
         .slice(0, 4);
 
     return (

@@ -35,4 +35,35 @@
   .card-hover {
     @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/20;
   }
+
+  /* Notification animations */
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  .animate-in {
+    animation: slideInRight 0.3s ease-out;
+  }
+
+  .animate-out {
+    animation: slideOutRight 0.3s ease-in;
+  }
 }

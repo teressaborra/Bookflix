@@ -21,8 +21,8 @@ export interface Movie {
     hasClosedCaptions: boolean;
     cast?: string[];
     director?: string;
-    averageRating: number;
-    totalReviews: number;
+    averageRating?: number;
+    totalReviews?: number;
     isNewRelease: boolean;
     createdAt: string;
 }

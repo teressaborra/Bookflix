@@ -15,6 +15,7 @@ import TheaterMovies from "./pages/TheaterMovies";
 import MovieTheaters from "./pages/MovieTheaters";
 import BookShow from "./pages/BookShow";
 import { useAuth } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 const ProtectedRoute = ({
   children,
@@ -34,63 +35,65 @@ const ProtectedRoute = ({
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-        <Route path="theaters" element={<Theaters />} />
-        <Route path="theaters/:theaterId/movies" element={<TheaterMovies />} />
-        <Route path="movies/:id" element={<MovieDetails />} />
-        <Route path="movies/:movieId/theaters" element={<MovieTheaters />} />
-        <Route path="movies/:movieId/book" element={<BookShow />} />
+    <NotificationProvider>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route path="theaters" element={<Theaters />} />
+          <Route path="theaters/:theaterId/movies" element={<TheaterMovies />} />
+          <Route path="movies/:id" element={<MovieDetails />} />
+          <Route path="movies/:movieId/theaters" element={<MovieTheaters />} />
+          <Route path="movies/:movieId/book" element={<BookShow />} />
 
-        <Route
-          path="booking/:showId"
-          element={
-            <ProtectedRoute>
-              <Booking />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="booking/:showId"
+            element={
+              <ProtectedRoute>
+                <Booking />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="booking-success/:bookingId"
-          element={
-            <ProtectedRoute>
-              <BookingSuccess />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="booking-success/:bookingId"
+            element={
+              <ProtectedRoute>
+                <BookingSuccess />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="profile/bookings"
-          element={
-            <ProtectedRoute>
-              <UserBookings />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="profile/bookings"
+            element={
+              <ProtectedRoute>
+                <UserBookings />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="profile/loyalty"
-          element={
-            <ProtectedRoute>
-              <LoyaltyPage />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="profile/loyalty"
+            element={
+              <ProtectedRoute>
+                <LoyaltyPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="admin"
-          element={
-            <ProtectedRoute adminOnly>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
-    </Routes>
+          <Route
+            path="admin"
+            element={
+              <ProtectedRoute adminOnly>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      </Routes>
+    </NotificationProvider>
   );
 }
 

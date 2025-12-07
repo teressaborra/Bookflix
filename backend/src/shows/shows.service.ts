@@ -89,4 +89,39 @@ export class ShowsService {
             reservedSeats: show.reservedSeats.map(rs => rs.seatNo)
         };
     }
+
+    async update(id: number, updateShowDto: CreateShowDto) {
+        const show = await this.findOne(id);
+        if (!show) {
+            throw new NotFoundException('Show not found');
+        }
+
+        // Update show properties
+        if (updateShowDto.startTime) {
+            show.startTime = new Date(updateShowDto.startTime);
+        }
+        if (updateShowDto.totalSeats) {
+            show.totalSeats = updateShowDto.totalSeats;
+        }
+        if (updateShowDto.basePrice) {
+            show.basePrice = updateShowDto.basePrice;
+        }
+        if (updateShowDto.currentPrice) {
+            show.currentPrice = updateShowDto.currentPrice;
+        }
+        if (updateShowDto.isPremium !== undefined) {
+            show.isPremium = updateShowDto.isPremium;
+        }
+
+        await this.showsRepository.save(show);
+        return this.findOne(id);
+    }
+
+    async remove(id: number) {
+        const show = await this.findOne(id);
+        if (show) {
+            await this.showsRepository.remove(show);
+        }
+        return { message: 'Show deleted successfully', id };
+    }
 }
