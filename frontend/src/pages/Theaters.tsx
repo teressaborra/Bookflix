@@ -96,17 +96,17 @@ const Theaters: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-dark flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading theaters...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4 text-gray-300">Loading theaters...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-dark">
             {/* Go Back Button */}
             <div className="bg-gradient-to-r from-red-600 to-red-800 pt-4 pb-0">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -136,10 +136,10 @@ const Theaters: React.FC = () => {
 
             {/* Search and Filter Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div className="bg-darker rounded-lg shadow-md p-6 mb-8 border border-white/10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Search Theaters
                             </label>
                             <input
@@ -147,17 +147,17 @@ const Theaters: React.FC = () => {
                                 placeholder="Search by name or location..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full px-4 py-2 bg-dark border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-gray-500"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
                                 Filter by Location
                             </label>
                             <select
                                 value={locationFilter}
                                 onChange={(e) => setLocationFilter(e.target.value)}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full px-4 py-2 bg-dark border border-white/20 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-white"
                             >
                                 <option value="">All Locations</option>
                                 {uniqueLocations.map(location => (
@@ -170,7 +170,7 @@ const Theaters: React.FC = () => {
 
                 {/* Results Count */}
                 <div className="mb-6">
-                    <p className="text-gray-600">
+                    <p className="text-gray-400">
                         Showing {filteredTheaters.length} of {theaters.length} theaters
                     </p>
                 </div>
@@ -178,9 +178,9 @@ const Theaters: React.FC = () => {
                 {/* Theaters Grid */}
                 {filteredTheaters.length === 0 ? (
                     <div className="text-center py-12">
-                        <div className="text-gray-400 text-6xl mb-4">🎭</div>
-                        <h3 className="text-xl font-semibold text-gray-600 mb-2">No theaters found</h3>
-                        <p className="text-gray-500">
+                        <div className="text-gray-500 text-6xl mb-4">🎭</div>
+                        <h3 className="text-xl font-semibold text-gray-300 mb-2">No theaters found</h3>
+                        <p className="text-gray-400">
                             {theaters.length === 0 
                                 ? "No theaters have been added yet." 
                                 : "Try adjusting your search criteria."}
@@ -204,9 +204,9 @@ const Theaters: React.FC = () => {
 
 const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater, movies }) => {
     return (
-        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+        <div className="bg-darker rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-white/10 hover:border-primary/50">
             {/* Theater Header */}
-            <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-4">
+            <div className="bg-gradient-to-r from-primary to-red-700 text-white p-4">
                 <h3 className="text-xl font-bold mb-1">{theater.name}</h3>
                 <p className="text-red-100 flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -220,7 +220,7 @@ const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater,
             <div className="p-4">
                 {/* Accessibility Features */}
                 <div className="mb-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">Accessibility Features</h4>
+                    <h4 className="font-semibold text-white mb-2">Accessibility Features</h4>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className={`flex items-center ${theater.wheelchairAccessible ? 'text-green-600' : 'text-gray-400'}`}>
                             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -254,12 +254,12 @@ const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater,
                 {/* Amenities */}
                 {theater.amenities && theater.amenities.length > 0 && (
                     <div className="mb-4">
-                        <h4 className="font-semibold text-gray-800 mb-2">Amenities</h4>
+                        <h4 className="font-semibold text-white mb-2">Amenities</h4>
                         <div className="flex flex-wrap gap-1">
                             {theater.amenities.map((amenity, index) => (
                                 <span
                                     key={index}
-                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                                    className="px-2 py-1 bg-dark text-gray-300 text-xs rounded-full border border-white/10"
                                 >
                                     {amenity}
                                 </span>
@@ -269,7 +269,7 @@ const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater,
                 )}
 
                 {/* Contact & Parking Info */}
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-2 text-sm text-gray-300">
                     {theater.contactNumber && (
                         <div className="flex items-center">
                             <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -292,7 +292,7 @@ const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater,
             {/* Currently Playing Movies */}
             {movies.length > 0 && (
                 <div className="px-4 pb-4">
-                    <h4 className="font-semibold text-gray-800 mb-3">Now Playing</h4>
+                    <h4 className="font-semibold text-white mb-3">Now Playing</h4>
                     <div className="grid grid-cols-3 gap-2 mb-4">
                         {movies.map((movie) => (
                             <div key={movie.id} className="text-center">
@@ -301,10 +301,10 @@ const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater,
                                     alt={movie.title}
                                     className="w-full h-16 object-cover rounded mb-1"
                                 />
-                                <p className="text-xs text-gray-600 line-clamp-2 font-medium">
+                                <p className="text-xs text-gray-300 line-clamp-2 font-medium">
                                     {movie.title}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-gray-400">
                                     {movie.language}
                                 </p>
                             </div>
@@ -317,7 +317,7 @@ const TheaterCard: React.FC<{ theater: Theater; movies: Movie[] }> = ({ theater,
             <div className="px-4 pb-4">
                 <Link 
                     to={`/theaters/${theater.id}/movies`}
-                    className="block w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-center"
+                    className="block w-full bg-primary hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-center"
                 >
                     View All Movies & Showtimes
                 </Link>
