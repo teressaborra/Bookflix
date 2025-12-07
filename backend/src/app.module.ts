@@ -31,27 +31,43 @@ import { GroupBooking } from './group-bookings/entities/group-booking.entity';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: 'localhost',
-        port: 5432,
-        username: 'postgres',
-        password: 'root',
-        database: 'bookflix',
-        entities: [
-          User, 
-          Movie, 
-          Theater, 
-          Show, 
-          Booking, 
-          ReservedSeat,
-          MovieReview,
-          UserPoints,
-          UserPreference,
-          GroupBooking
-        ],
-        synchronize: true, // Auto-create tables (dev only)
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        
+        const baseConfig = {
+          type: 'postgres' as const,
+          entities: [
+            User, 
+            Movie, 
+            Theater, 
+            Show, 
+            Booking, 
+            ReservedSeat,
+            MovieReview,
+            UserPoints,
+            UserPreference,
+            GroupBooking
+          ],
+          synchronize: true, // Auto-create tables (dev only)
+        };
+
+        if (databaseUrl) {
+          return {
+            ...baseConfig,
+            url: databaseUrl,
+            ssl: { rejectUnauthorized: false },
+          };
+        }
+
+        return {
+          ...baseConfig,
+          host: configService.get<string>('DB_HOST', 'localhost'),
+          port: parseInt(configService.get<string>('DB_PORT', '5432'), 10),
+          username: configService.get<string>('DB_USERNAME', 'postgres'),
+          password: configService.get<string>('DB_PASSWORD', 'root'),
+          database: configService.get<string>('DB_NAME', 'bookflix'),
+        };
+      },
       inject: [ConfigService],
     }),
     UsersModule,
