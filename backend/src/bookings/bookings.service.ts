@@ -291,11 +291,17 @@ export class BookingsService {
     }
 
     async getBookingHistory(userId: number) {
-        return this.bookingsRepository.find({
+        const bookings = await this.bookingsRepository.find({
             where: { user: { id: userId } },
-            relations: ['show', 'show.movie', 'show.theater'],
+            relations: ['show', 'show.movie', 'show.theater', 'reservedSeats'],
             order: { createdAt: 'DESC' }
         });
+
+        return bookings.map(booking => ({
+            ...booking,
+            canCancel: this.canCancelBooking(booking),
+            canReschedule: this.canRescheduleBooking(booking)
+        }));
     }
 
     async getBookingDetails(bookingId: number, userId: number) {

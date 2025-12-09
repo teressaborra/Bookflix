@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Play, Star, ChevronRight, ChevronLeft } from 'lucide-react';
-import bgImage from '../assets/images/bg.png';
 
 const Hero = () => {
     const [selectedDate, setSelectedDate] = useState(0);
@@ -22,7 +21,7 @@ const Hero = () => {
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
                     style={{
-                        backgroundImage: `url(${bgImage})`,
+                        backgroundImage: `url(/bg1.png)`,
                     }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />

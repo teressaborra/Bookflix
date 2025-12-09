@@ -172,7 +172,7 @@ const LoyaltyDashboard: React.FC = () => {
 
                 <div className="bg-card rounded-lg p-4 text-center">
                     <Star className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold">${userPoints.totalSpent.toFixed(2)}</div>
+                    <div className="text-2xl font-bold">${Number(userPoints.totalSpent || 0).toFixed(2)}</div>
                     <div className="text-sm text-muted">Total Spent</div>
                 </div>
             </div>

@@ -206,7 +206,7 @@ const UserBookings = () => {
                                             <CreditCard className="w-5 h-5 text-primary" />
                                             <div>
                                                 <p className="text-xs text-gray-500 uppercase">Payment</p>
-                                                <p className="font-bold">${booking.amountPaid.toFixed(2)}</p>
+                                                <p className="font-bold">${Number(booking.amountPaid || 0).toFixed(2)}</p>
                                             </div>
                                         </div>
                                     </div>
