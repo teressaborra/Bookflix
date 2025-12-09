@@ -191,6 +191,18 @@ const Admin = () => {
 
   const handleMovieSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!movieForm.title || !movieForm.description || !movieForm.durationMin || 
+        !movieForm.language || !movieForm.posterUrl || !movieForm.genre || 
+        !movieForm.rating || !movieForm.releaseDate) {
+      showError(
+        "Validation Error",
+        "Please fill in all required fields marked with *"
+      );
+      return;
+    }
+
     try {
       const movieData = {
         ...movieForm,
