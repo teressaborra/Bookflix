@@ -144,7 +144,7 @@ const LoyaltyDashboard: React.FC = () => {
                     <div className="mt-4">
                         <div className="flex justify-between text-sm mb-2">
                             <span>Progress to {nextTier.nextTier}</span>
-                            <span>${nextTier.remaining.toFixed(2)} remaining</span>
+                            <span>₹{nextTier.remaining.toFixed(2)} remaining</span>
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-2">
                             <div
@@ -172,7 +172,7 @@ const LoyaltyDashboard: React.FC = () => {
 
                 <div className="bg-card rounded-lg p-4 text-center">
                     <Star className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                    <div className="text-2xl font-bold">${Number(userPoints.totalSpent || 0).toFixed(2)}</div>
+                    <div className="text-2xl font-bold">₹{Number(userPoints.totalSpent || 0).toFixed(2)}</div>
                     <div className="text-sm text-muted">Total Spent</div>
                 </div>
             </div>
@@ -245,7 +245,7 @@ const LoyaltyDashboard: React.FC = () => {
 
                 {redeemAmount && parseInt(redeemAmount) > 0 && (
                     <div className="mt-3 text-sm text-green-400">
-                        You'll get ${(parseInt(redeemAmount) * 0.01).toFixed(2)} discount
+                        You'll get ₹{(parseInt(redeemAmount) * 0.01).toFixed(2)} discount
                     </div>
                 )}
             </div>

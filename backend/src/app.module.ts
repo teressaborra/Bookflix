@@ -15,6 +15,7 @@ import { DynamicPricingModule } from './dynamic-pricing/dynamic-pricing.module';
 import { PreferencesModule } from './preferences/preferences.module';
 import { GroupBookingsModule } from './group-bookings/group-bookings.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { TheaterOwnerModule } from './theater-owner/theater-owner.module';
 import { User } from './users/entities/user.entity';
 import { Movie } from './movies/entities/movie.entity';
 import { Theater } from './theaters/entities/theater.entity';
@@ -84,6 +85,7 @@ import { GroupBooking } from './group-bookings/entities/group-booking.entity';
     PreferencesModule,
     GroupBookingsModule,
     AnalyticsModule,
+    TheaterOwnerModule,
   ],
 })
 export class AppModule { }

@@ -8,6 +8,7 @@ import MovieDetails from "./pages/MovieDetails";
 import Booking from "./pages/Booking";
 import BookingSuccess from "./pages/BookingSuccess";
 import Admin from "./pages/Admin";
+import TheaterOwnerPanel from "./pages/TheaterOwnerPanel";
 import UserBookings from "./pages/UserBookings";
 import LoyaltyPage from "./pages/LoyaltyPage";
 import Theaters from "./pages/Theaters";
@@ -88,6 +89,15 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <Admin />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="theater-owner"
+            element={
+              <ProtectedRoute>
+                <TheaterOwnerPanel />
               </ProtectedRoute>
             }
           />

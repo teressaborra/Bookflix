@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Movie } from '../movies/entities/movie.entity';
 import { Booking } from '../bookings/entities/booking.entity';
 import { UserPreference } from '../preferences/entities/user-preference.entity';
@@ -98,15 +98,28 @@ export class RecommendationsService {
     }
 
     async getTrendingMovies(): Promise<Movie[]> {
-        return this.moviesRepository.createQueryBuilder('movie')
-            .leftJoinAndSelect('movie.shows', 'show')
+        // Get movies with most bookings in the last week
+        const trendingMovieIds = await this.showsRepository.createQueryBuilder('show')
             .leftJoin('show.bookings', 'booking')
+            .select('show.movieId', 'movieId')
+            .addSelect('COUNT(booking.id)', 'booking_count')
             .where('show.startTime > :weekAgo', { weekAgo: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) })
-            .groupBy('movie.id')
-            .orderBy('COUNT(booking.id)', 'DESC')
-            .addOrderBy('movie.averageRating', 'DESC')
-            .take(10)
-            .getMany();
+            .groupBy('show.movieId')
+            .orderBy('booking_count', 'DESC')
+            .limit(10)
+            .getRawMany();
+
+        if (trendingMovieIds.length === 0) {
+            // If no trending movies, return highest rated new releases
+            return this.moviesRepository.find({
+                where: { isNewRelease: true },
+                order: { averageRating: 'DESC', totalReviews: 'DESC' },
+                take: 10
+            });
+        }
+
+        const movieIds = trendingMovieIds.map(row => row.movieId);
+        return this.moviesRepository.findBy({ id: In(movieIds) });
     }
 
     async getNewReleases(): Promise<Movie[]> {

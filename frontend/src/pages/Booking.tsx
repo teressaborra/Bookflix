@@ -127,9 +127,9 @@ const Booking = () => {
                 // Simulate 95% success rate
                 const success = Math.random() > 0.05;
                 if (success) {
-                    console.log(`Payment of $${amount.toFixed(2)} processed successfully via ${method}`);
+                    console.log(`Payment of ₹${amount.toFixed(2)} processed successfully via ${method}`);
                 } else {
-                    console.log(`Payment of $${amount.toFixed(2)} failed via ${method}`);
+                    console.log(`Payment of ₹${amount.toFixed(2)} failed via ${method}`);
                 }
                 resolve(success);
             }, 2000); // 2 second delay to simulate processing
@@ -298,7 +298,7 @@ const Booking = () => {
                                         <div className="flex items-center gap-4">
                                             <div className="flex-1">
                                                 <div className="text-sm text-muted mb-2">
-                                                    Available: {userPoints?.availablePoints || 0} points (${((userPoints?.availablePoints || 0) * 0.01).toFixed(2)})
+                                                    Available: {userPoints?.availablePoints || 0} points (₹{((userPoints?.availablePoints || 0) * 0.01).toFixed(2)})
                                                 </div>
                                                 <input
                                                     type="range"
@@ -310,7 +310,7 @@ const Booking = () => {
                                                 />
                                                 <div className="flex justify-between text-sm text-muted mt-1">
                                                     <span>0 points</span>
-                                                    <span>{pointsToRedeem} points (${(pointsToRedeem * 0.01).toFixed(2)} discount)</span>
+                                                    <span>{pointsToRedeem} points (₹{(pointsToRedeem * 0.01).toFixed(2)} discount)</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -365,7 +365,7 @@ const Booking = () => {
                                 {pointsToRedeem > 0 && (
                                     <div className="flex justify-between text-green-400">
                                         <span>Points Discount:</span>
-                                        <span>-${(pointsToRedeem * 0.01).toFixed(2)}</span>
+                                        <span>-₹{(pointsToRedeem * 0.01).toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="border-t border-white/20 pt-3">

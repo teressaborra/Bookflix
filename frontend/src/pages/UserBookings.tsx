@@ -206,7 +206,7 @@ const UserBookings = () => {
                                             <CreditCard className="w-5 h-5 text-primary" />
                                             <div>
                                                 <p className="text-xs text-gray-500 uppercase">Payment</p>
-                                                <p className="font-bold">${Number(booking.amountPaid || 0).toFixed(2)}</p>
+                                                <p className="font-bold">₹{Number(booking.amountPaid || 0).toFixed(2)}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -231,7 +231,7 @@ const UserBookings = () => {
                                         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-4">
                                             <div className="flex items-center gap-2 text-red-400 text-sm">
                                                 <XCircle className="w-4 h-4" />
-                                                <span>Cancelled - Refund: ${booking.refundAmount.toFixed(2)} ({(booking.refundPercentage! * 100).toFixed(0)}%)</span>
+                                                <span>Cancelled - Refund: ₹{booking.refundAmount.toFixed(2)} ({(booking.refundPercentage! * 100).toFixed(0)}%)</span>
                                             </div>
                                             {booking.cancellationReason && (
                                                 <p className="text-sm text-gray-400 mt-1">Reason: {booking.cancellationReason}</p>

@@ -133,7 +133,7 @@ const MovieDetails = () => {
                                 <p className="text-sm text-gray-400">Ticket prices adjust based on real-time demand.</p>
                             </div>
                             <div className="text-right">
-                                <div className="text-2xl font-bold text-white">$12.99 - $24.99</div>
+                                <div className="text-2xl font-bold text-white">₹149.99 - ₹750.99</div>
                                 <div className="text-xs text-gray-500 uppercase tracking-wider">Price Range</div>
                             </div>
                         </div>
@@ -183,21 +183,14 @@ const MovieDetails = () => {
                                             <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                                                 <div className="text-right">
                                                     <div className="text-xl font-bold text-white">
-                                                        ${(() => {
-                                                            try {
-                                                                if (show.currentPrice && typeof show.currentPrice === 'number') {
-                                                                    return show.currentPrice.toFixed(2);
-                                                                } else if (show.basePrice && typeof show.basePrice === 'number') {
-                                                                    return show.basePrice.toFixed(2);
-                                                                } else {
-                                                                    return '0.00';
-                                                                }
-                                                            } catch (error) {
-                                                                return '0.00';
-                                                            }
+                                                        ₹{(() => {
+                                                            const price = show.currentPrice || show.basePrice;
+                                                            if (!price) return '0.00';
+                                                            const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+                                                            return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2);
                                                         })()}
                                                     </div>
-                                                    {show.currentPrice && show.basePrice && show.currentPrice !== show.basePrice && (
+                                                    {show.currentPrice && show.basePrice && Number(show.currentPrice) !== Number(show.basePrice) && (
                                                         <div className="text-xs text-orange-400 flex items-center justify-end gap-1">
                                                             <TrendingUp className="w-3 h-3" /> Dynamic
                                                         </div>

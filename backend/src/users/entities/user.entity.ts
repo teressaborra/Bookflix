@@ -4,6 +4,7 @@ import { Booking } from '../../bookings/entities/booking.entity';
 export enum UserRole {
     USER = 'user',
     ADMIN = 'admin',
+    THEATER_OWNER = 'theater_owner',
 }
 
 @Entity()
@@ -22,6 +23,9 @@ export class User {
 
     @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
     role: UserRole;
+
+    @Column({ nullable: true })
+    theaterId: number;
 
     @CreateDateColumn()
     createdAt: Date;

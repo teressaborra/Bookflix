@@ -38,7 +38,7 @@ export class ShowsService {
         return this.showsRepository.save(show);
     }
 
-    findAll(movieId?: number, date?: string, theaterId?: number) {
+    async findAll(movieId?: number, date?: string, theaterId?: number) {
         const query = this.showsRepository.createQueryBuilder('show')
             .leftJoinAndSelect('show.movie', 'movie')
             .leftJoinAndSelect('show.theater', 'theater')
@@ -66,7 +66,7 @@ export class ShowsService {
             query.andWhere('show.startTime > :now', { now: new Date() });
         }
 
-        return query.getMany();
+        return await query.getMany();
     }
 
     async findOne(id: number) {
